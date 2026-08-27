@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Calendar 🩵</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #0a0f1a;
+    --bg2:       #0f1623;
+    --bg3:       #151e2e;
+    --card:      #111827;
+    --card2:     #1a2438;
+    --blue:      #7dd3fc;
+    --blue2:     #bae6fd;
+    --blue-dk:   #0ea5e9;
+    --blue-lt:   rgba(125,211,252,0.12);
+    --blue-lt2:  rgba(125,211,252,0.06);
+    --cyan:      #67e8f9;
+    --pink:      #f9a8d4;
+    --text:      #e0eeff;
+    --muted:     #4a6480;
+    --border:    rgba(125,211,252,0.10);
+    --border2:   rgba(125,211,252,0.20);
+    --shadow:    0 4px 24px rgba(0,0,0,0.5);
+    --shadow2:   0 16px 48px rgba(0,0,0,0.6);
+    --glow:      0 0 40px rgba(125,211,252,0.08);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', 'Noto Sans Thai', sans-serif;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content:'';
+    position:fixed; inset:0;
+    background-image:
+      linear-gradient(rgba(125,211,252,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(125,211,252,0.025) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events:none; z-index:0;
+  }
+
+  body::after {
+    content:'';
+    position:fixed; inset:0;
+    background:
+      radial-gradient(ellipse at 10% 10%, rgba(14,165,233,0.10) 0%, transparent 50%),
+      radial-gradient(ellipse at 90% 90%, rgba(103,232,249,0.06) 0%, transparent 50%);
+    pointer-events:none; z-index:0;
+  }
+
+  /* === LOGIN === */
+  #login-screen {
+    position:fixed; inset:0; z-index:999;
+    display:flex; align-items:center; justify-content:center;
+    background: var(--bg);
+  }
+
+  .login-box {
+    background: var(--card);
+    border: 1px solid var(--border2);
+    border-radius: 24px;
+    padding: 3rem 2.5rem;
+    width: 100%; max-width: 360px;
+    box-shadow: var(--shadow2), var(--glow);
+    text-align: center;
+    position: relative; overflow: hidden;
+  }
+
+  .login-box::before {
+    content:'';
+    position:absolute; top:-80px; left:50%; transform:translateX(-50%);
+    width:240px; height:240px; border-radius:50%;
+    background: radial-gradient(circle, rgba(125,211,252,0.10), transparent 70%);
+    pointer-events:none;
+  }
+
+  .login-icon { font-size:3rem; margin-bottom:1rem; }
+  .login-title {
+    font-size:1.4rem; font-weight:600; color:var(--blue2);
+    margin-bottom:0.4rem; letter-spacing:-0.01em;
+  }
+  .login-sub { font-size:0.82rem; color:var(--muted); margin-bottom:2rem; }
+
+  .login-input {
+    width:100%;
+    background: var(--bg2);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 0.85rem 1rem;
+    font-size: 1rem; font-family: 'DM Mono', monospace;
+    color: var(--text); outline:none;
+    text-align:center; letter-spacing:0.25em;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    margin-bottom: 1rem;
+  }
+  .login-input:focus {
+    border-color: var(--blue-dk);
+    box-shadow: 0 0 0 3px rgba(125,211,252,0.12);
+  }
+
+  .login-btn {
+    width:100%;
+    background: linear-gradient(135deg, #0369a1, var(--blue-dk));
+    color:#fff; border:none; border-radius:12px;
+    padding:0.85rem; font-size:0.95rem; font-weight:500;
+    cursor:pointer; transition:all 0.25s;
+    font-family:'DM Sans', sans-serif;
+    box-shadow: 0 4px 20px rgba(14,165,233,0.35);
+  }
+  .login-btn:hover { transform:translateY(-2px); box-shadow: 0 8px 28px rgba(14,165,233,0.5); }
+
+  .login-error { font-size:0.78rem; color:#f87171; margin-top:0.75rem; display:none; }
+
+  /* === APP === */
+  #app {
+    display:none; position:relative; z-index:1;
+    max-width:900px; margin:0 auto; padding:2rem 1rem;
+  }
+
+  /* === HEADER === */
+  header {
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:2rem; flex-wrap:wrap; gap:1rem;
+  }
+
+  .header-left h1 {
+    font-size:1.5rem; font-weight:600; color:var(--blue2);
+    letter-spacing:-0.01em;
+  }
+  .header-left .subtitle {
+    font-family:'DM Mono', monospace;
+    font-size:0.72rem; color:var(--muted); margin-top:0.2rem;
+  }
+
+  .header-right { display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; }
+
+  .nav-btn {
+    background:var(--card2); border:1px solid var(--border);
+    border-radius:10px; padding:0.5rem 1rem;
+    font-size:0.9rem; color:var(--blue); cursor:pointer;
+    font-weight:500; transition:all 0.2s;
+    font-family:'DM Sans', sans-serif;
+  }
+  .nav-btn:hover { background:var(--blue-dk); color:#fff; border-color:var(--blue-dk); }
+
+  .month-label {
+    font-size:0.9rem; font-weight:600; color:var(--text);
+    min-width:155px; text-align:center;
+    font-family:'DM Mono', monospace; letter-spacing:0.02em;
+  }
+
+  .today-btn {
+    background: linear-gradient(135deg, #0369a1, var(--blue-dk));
+    color:#fff; border:none; border-radius:10px;
+    padding:0.5rem 1.1rem; font-size:0.82rem; font-weight:500;
+    cursor:pointer; transition:all 0.2s;
+    font-family:'DM Sans', sans-serif;
+    box-shadow: 0 2px 12px rgba(14,165,233,0.3);
+  }
+  .today-btn:hover { transform:translateY(-1px); box-shadow:0 4px 20px rgba(14,165,233,0.5); }
+
+  .logout-btn {
+    background:none; border:1px solid var(--border);
+    border-radius:10px; padding:0.5rem 0.8rem;
+    font-size:0.75rem; color:var(--muted); cursor:pointer;
+    transition:all 0.2s; font-family:'DM Sans', sans-serif;
+  }
+  .logout-btn:hover { border-color:#f87171; color:#f87171; }
+
+  .save-indicator {
+    font-family:'DM Mono', monospace; font-size:0.65rem; color:var(--muted);
+    display:flex; align-items:center; gap:0.4rem;
+  }
+  .save-dot {
+    width:6px; height:6px; border-radius:50%;
+    background:var(--cyan); box-shadow:0 0 6px var(--cyan);
+  }
+  .save-dot.saving {
+    background:var(--blue); box-shadow:0 0 6px var(--blue);
+    animation:pulse 1s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* === CALENDAR === */
+  .cal-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    box-shadow: var(--shadow), var(--glow);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+  }
+
+  .dow-row {
+    display:grid; grid-template-columns:repeat(7,1fr);
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+  }
+  .dow-cell {
+    padding:0.8rem 0; text-align:center;
+    font-family:'DM Mono', monospace; font-size:0.65rem;
+    letter-spacing:0.1em; text-transform:uppercase; color:var(--muted);
+  }
+  .dow-cell:first-child { color:var(--pink); }
+  .dow-cell:last-child  { color:var(--cyan); }
+
+  .days-grid { display:grid; grid-template-columns:repeat(7,1fr); }
+
+  .day-cell {
+    min-height:96px; padding:0.55rem;
+    border-right:1px solid var(--border);
+    border-bottom:1px solid var(--border);
+    cursor:pointer; transition:background 0.15s; position:relative;
+  }
+  .day-cell:nth-child(7n) { border-right:none; }
+  .day-cell:hover { background:var(--card2); }
+  .day-cell.other-month { opacity:0.2; cursor:default; pointer-events:none; }
+
+  .day-num {
+    font-size:0.82rem; font-weight:400;
+    width:28px; height:28px;
+    display:flex; align-items:center; justify-content:center;
+    border-radius:50%; transition:all 0.15s;
+    font-family:'DM Mono', monospace;
+    color:var(--text);
+  }
+  .day-cell.today .day-num {
+    background: linear-gradient(135deg, #0369a1, var(--blue-dk));
+    color:#fff; font-weight:600;
+    box-shadow: 0 0 20px rgba(14,165,233,0.5);
+  }
+  .day-cell.sunday .day-num  { color:var(--pink); }
+  .day-cell.saturday .day-num { color:var(--cyan); }
+
+  .note-dots { margin-top:0.3rem; display:flex; flex-wrap:wrap; gap:0.25rem; }
+  .note-dot {
+    font-size:0.67rem;
+    background:rgba(125,211,252,0.10);
+    color:var(--blue);
+    border:1px solid rgba(125,211,252,0.18);
+    border-radius:4px; padding:0.1rem 0.45rem;
+    max-width:100%; overflow:hidden; text-overflow:ellipsis;
+    white-space:nowrap; line-height:1.5;
+  }
+  .note-more { font-size:0.6rem; color:var(--muted); font-family:'DM Mono', monospace; }
+
+  /* === MODAL === */
+  .modal-overlay {
+    position:fixed; inset:0; z-index:200;
+    background:rgba(5,10,20,0.80); backdrop-filter:blur(8px);
+    display:flex; align-items:center; justify-content:center; padding:1rem;
+    opacity:0; pointer-events:none; transition:opacity 0.25s;
+  }
+  .modal-overlay.open { opacity:1; pointer-events:all; }
+
+  .modal {
+    background:var(--card); border:1px solid var(--border2);
+    border-radius:20px; width:100%; max-width:480px;
+    box-shadow: var(--shadow2), var(--glow);
+    transform:translateY(16px); transition:transform 0.25s; overflow:hidden;
+  }
+  .modal-overlay.open .modal { transform:translateY(0); }
+
+  .modal-header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:1.2rem 1.5rem;
+    background:var(--bg2); border-bottom:1px solid var(--border);
+  }
+  .modal-date { font-size:0.95rem; font-weight:600; color:var(--blue2); }
+  .modal-close-btn {
+    background:none; border:none; cursor:pointer; font-size:1rem; color:var(--muted);
+    width:32px; height:32px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center; transition:all 0.2s;
+  }
+  .modal-close-btn:hover { background:var(--card2); color:var(--blue); }
+
+  .modal-body { padding:1.5rem; }
+
+  .notes-list {
+    display:flex; flex-direction:column; gap:0.6rem;
+    margin-bottom:1rem; max-height:220px; overflow-y:auto;
+  }
+
+  .note-item {
+    display:flex; align-items:flex-start; gap:0.6rem;
+    background:var(--bg2); border:1px solid var(--border);
+    border-radius:10px; padding:0.7rem 0.9rem;
+    font-size:0.875rem; line-height:1.6;
+  }
+  .note-item-text { flex:1; color:var(--text); word-break:break-word; }
+  .note-delete {
+    background:none; border:none; cursor:pointer; color:var(--muted);
+    font-size:0.85rem; padding:0.1rem 0.3rem; border-radius:4px;
+    transition:all 0.15s; flex-shrink:0;
+  }
+  .note-delete:hover { background:rgba(248,113,113,0.12); color:#f87171; }
+
+  .empty-state { text-align:center; padding:1.5rem 0; color:var(--muted); font-size:0.85rem; }
+  .empty-icon  { font-size:2rem; margin-bottom:0.5rem; }
+
+  .add-note-row { display:flex; gap:0.5rem; align-items:flex-end; }
+  .note-input {
+    flex:1; background:var(--bg2); border:1.5px solid var(--border);
+    border-radius:12px; padding:0.7rem 1rem; font-size:0.875rem;
+    font-family:'DM Sans','Noto Sans Thai',sans-serif;
+    color:var(--text); resize:none; outline:none;
+    transition:border-color 0.2s, box-shadow 0.2s; line-height:1.5;
+  }
+  .note-input:focus {
+    border-color:var(--blue-dk);
+    box-shadow:0 0 0 3px rgba(125,211,252,0.10);
+  }
+  .note-input::placeholder { color:var(--muted); }
+
+  .add-btn {
+    background:linear-gradient(135deg, #0369a1, var(--blue-dk));
+    color:#fff; border:none; border-radius:12px; padding:0.7rem 1.2rem;
+    font-size:0.85rem; font-weight:500; cursor:pointer; white-space:nowrap;
+    transition:all 0.2s; font-family:'DM Sans',sans-serif;
+    box-shadow:0 2px 12px rgba(14,165,233,0.3);
+  }
+  .add-btn:hover { transform:translateY(-1px); box-shadow:0 4px 20px rgba(14,165,233,0.5); }
+
+  /* === UPCOMING === */
+  .upcoming-card {
+    background:var(--card); border:1px solid var(--border);
+    border-radius:16px; box-shadow:var(--shadow); padding:1.5rem;
+  }
+  .upcoming-title {
+    font-size:0.72rem; font-weight:600; color:var(--blue);
+    margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem;
+    font-family:'DM Mono', monospace; letter-spacing:0.1em; text-transform:uppercase;
+  }
+  .upcoming-list { display:flex; flex-direction:column; gap:0.6rem; }
+  .upcoming-item {
+    display:flex; gap:1rem; align-items:flex-start;
+    padding:0.75rem 1rem; background:var(--bg2);
+    border:1px solid var(--border); border-radius:10px;
+    cursor:pointer; transition:all 0.15s;
+  }
+  .upcoming-item:hover { border-color:var(--blue-dk); background:var(--card2); }
+  .upcoming-date-badge {
+    min-width:44px; text-align:center;
+    background:var(--blue-lt); border-radius:8px; padding:0.3rem 0.4rem;
+  }
+  .ud-day { font-size:1.1rem; font-weight:600; color:var(--blue2); line-height:1; font-family:'DM Mono',monospace; }
+  .ud-month { font-family:'DM Mono',monospace; font-size:0.58rem; color:var(--blue); text-transform:uppercase; margin-top:0.1rem; }
+  .upcoming-note-text { font-size:0.85rem; color:var(--text); line-height:1.5; padding-top:0.2rem; }
+  .upcoming-empty { text-align:center; padding:1rem 0; color:var(--muted); font-size:0.82rem; }
+
+  ::-webkit-scrollbar { width:5px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:rgba(125,211,252,0.15); border-radius:3px; }
+
+  @media (max-width:600px) {
+    #app { padding:1rem 0.5rem; }
+    .day-cell { min-height:64px; }
+    .note-dot { display:none; }
+    .month-label { min-width:120px; font-size:0.85rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-icon">🩵</div>
+    <div class="login-title">My Calendar</div>
+    <div class="login-sub">กรอก password เพื่อเข้าใช้งานค่ะ</div>
+    <input type="password" class="login-input" id="pw-input"
+      placeholder="••••••••"
+      onkeydown="if(event.key==='Enter') doLogin()">
+    <button class="login-btn" onclick="doLogin()">เข้าใช้งาน →</button>
+    <div class="login-error" id="pw-error">Password ไม่ถูกต้องค่ะ 🩵</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <header>
+    <div class="header-left">
+      <h1>🩵 My Calendar</h1>
+      <div class="subtitle" id="today-label"></div>
+    </div>
+    <div class="header-right">
+      <div class="save-indicator">
+        <div class="save-dot" id="save-dot"></div>
+        <span id="save-text">synced</span>
+      </div>
+      <button class="nav-btn" onclick="changeMonth(-1)">‹</button>
+      <span class="month-label" id="month-label"></span>
+      <button class="nav-btn" onclick="changeMonth(1)">›</button>
+      <button class="today-btn" onclick="goToday()">Today</button>
+      <button class="logout-btn" onclick="doLogout()">ออก</button>
+    </div>
+  </header>
+
+  <div class="cal-card">
+    <div class="dow-row">
+      <div class="dow-cell">Sun</div>
+      <div class="dow-cell">Mon</div>
+      <div class="dow-cell">Tue</div>
+      <div class="dow-cell">Wed</div>
+      <div class="dow-cell">Thu</div>
+      <div class="dow-cell">Fri</div>
+      <div class="dow-cell">Sat</div>
+    </div>
+    <div class="days-grid" id="days-grid"></div>
+  </div>
+
+  <div class="upcoming-card">
+    <div class="upcoming-title">📌 upcoming events</div>
+    <div class="upcoming-list" id="upcoming-list"></div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-date" id="modal-date"></div>
+      <button class="modal-close-btn" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="notes-list" id="notes-list"></div>
+      <div class="add-note-row">
+        <textarea class="note-input" id="note-input" rows="2"
+          placeholder="เพิ่มกิจกรรม หรือโน้ต..."
+          onkeydown="handleKey(event)"></textarea>
+        <button class="add-btn" onclick="addNote()">+ เพิ่ม</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+  // ==============================
+  // 🔑 แก้ได้ตรงนี้เลยค่ะ
+  const PASSWORD = "kinngpai2026";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDsF5doDSkfUTKa2Y6FcVfqfFIIXBwz7cA",
+    authDomain: "my-calender-395eb.firebaseapp.com",
+    projectId: "my-calender-395eb",
+    storageBucket: "my-calender-395eb.firebasestorage.app",
+    messagingSenderId: "24481857788",
+    appId: "1:24481857788:web:819c47b90145e3589e5779",
+    measurementId: "G-LWMH49Y8W1"
+  };
+  // ==============================
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+
+  const MONTHS_TH = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  const MONTHS_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const DAYS_EN   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+  const todayDate = new Date();
+  let viewYear    = todayDate.getFullYear();
+  let viewMonth   = todayDate.getMonth();
+  let selectedKey = null;
+  let notesCache  = {};
+  let unsubscribe = null;
+
+  window.doLogin = function() {
+    const val = document.getElementById('pw-input').value;
+    if (val === PASSWORD) {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      initCalendar();
+      startSync();
+    } else {
+      document.getElementById('pw-error').style.display = 'block';
+      document.getElementById('pw-input').value = '';
+      document.getElementById('pw-input').focus();
+    }
+  };
+
+  window.doLogout = function() {
+    if (unsubscribe) unsubscribe();
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('pw-input').value = '';
+    notesCache = {};
+  };
+
+  function startSync() {
+    const ref = doc(db, 'calendar', 'notes');
+    unsubscribe = onSnapshot(ref, snap => {
+      notesCache = snap.exists() ? (snap.data().data || {}) : {};
+      render();
+    });
+  }
+
+  async function saveToFirebase() {
+    setSaving(true);
+    try {
+      await setDoc(doc(db, 'calendar', 'notes'), { data: notesCache });
+      setSaving(false);
+    } catch(e) { setSaving(false); }
+  }
+
+  function setSaving(s) {
+    const dot = document.getElementById('save-dot');
+    const txt = document.getElementById('save-text');
+    dot.className = s ? 'save-dot saving' : 'save-dot';
+    txt.textContent = s ? 'saving...' : 'synced ✓';
+  }
+
+  function keyOf(y, m, d) {
+    return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  }
+
+  function initCalendar() {
+    document.getElementById('today-label').textContent =
+      `${DAYS_EN[todayDate.getDay()]}, ${todayDate.getDate()} ${MONTHS_TH[todayDate.getMonth()]} ${todayDate.getFullYear()+543}`;
+  }
+
+  function render() {
+    const grid = document.getElementById('days-grid');
+    grid.innerHTML = '';
+    document.getElementById('month-label').textContent =
+      `${MONTHS_TH[viewMonth]} ${viewYear}`;
+
+    const todayKey = keyOf(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate());
+    const first    = new Date(viewYear, viewMonth, 1).getDay();
+    const last     = new Date(viewYear, viewMonth+1, 0).getDate();
+    const prevLast = new Date(viewYear, viewMonth, 0).getDate();
+
+    for (let i = first-1; i >= 0; i--)
+      grid.appendChild(makeCell(prevLast-i, viewYear, viewMonth-1, true));
+
+    for (let d = 1; d <= last; d++) {
+      const key  = keyOf(viewYear, viewMonth, d);
+      const cell = makeCell(d, viewYear, viewMonth, false);
+      if (key === todayKey) cell.classList.add('today');
+      const dow = new Date(viewYear, viewMonth, d).getDay();
+      if (dow === 0) cell.classList.add('sunday');
+      if (dow === 6) cell.classList.add('saturday');
+      cell.onclick = () => openModal(viewYear, viewMonth, d);
+      grid.appendChild(cell);
+    }
+
+    const total  = first + last;
+    const remain = total % 7 === 0 ? 0 : 7-(total%7);
+    for (let d = 1; d <= remain; d++)
+      grid.appendChild(makeCell(d, viewYear, viewMonth+1, true));
+
+    renderUpcoming();
+  }
+
+  function makeCell(d, y, m, other) {
+    const cell = document.createElement('div');
+    cell.className = 'day-cell' + (other ? ' other-month' : '');
+    const num = document.createElement('div');
+    num.className = 'day-num';
+    num.textContent = d;
+    cell.appendChild(num);
+    if (!other) {
+      const key = keyOf(y, m, d);
+      const ns  = notesCache[key] || [];
+      if (ns.length) {
+        const dots = document.createElement('div');
+        dots.className = 'note-dots';
+        ns.slice(0,2).forEach(n => {
+          const dot = document.createElement('div');
+          dot.className = 'note-dot';
+          dot.textContent = n;
+          dots.appendChild(dot);
+        });
+        if (ns.length > 2) {
+          const more = document.createElement('div');
+          more.className = 'note-more';
+          more.textContent = `+${ns.length-2}`;
+          dots.appendChild(more);
+        }
+        cell.appendChild(dots);
+      }
+    }
+    return cell;
+  }
+
+  function renderUpcoming() {
+    const list  = document.getElementById('upcoming-list');
+    list.innerHTML = '';
+    const floor = new Date(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate());
+    const entries = [];
+
+    Object.keys(notesCache).forEach(key => {
+      const [y,m,d] = key.split('-').map(Number);
+      const date = new Date(y, m-1, d);
+      if (date >= floor && notesCache[key].length)
+        notesCache[key].forEach(n => entries.push({date,d,m:m-1,y,text:n}));
+    });
+
+    entries.sort((a,b) => a.date - b.date);
+    if (!entries.length) {
+      list.innerHTML = '<div class="upcoming-empty">ยังไม่มีกิจกรรม — กดที่วันในปฏิทินเพื่อเพิ่มได้เลยค่ะ 🩵</div>';
+      return;
+    }
+    entries.slice(0,6).forEach(e => {
+      const item = document.createElement('div');
+      item.className = 'upcoming-item';
+      item.onclick = () => openModal(e.y, e.m, e.d);
+      item.innerHTML = `
+        <div class="upcoming-date-badge">
+          <div class="ud-day">${e.d}</div>
+          <div class="ud-month">${MONTHS_EN[e.m]}</div>
+        </div>
+        <div class="upcoming-note-text">${e.text}</div>`;
+      list.appendChild(item);
+    });
+  }
+
+  window.openModal = function(y, m, d) {
+    selectedKey = keyOf(y, m, d);
+    const obj   = new Date(y, m, d);
+    document.getElementById('modal-date').textContent =
+      `${DAYS_EN[obj.getDay()]}, ${d} ${MONTHS_TH[m]} ${y+543}`;
+    renderNotesList();
+    document.getElementById('modal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => document.getElementById('note-input').focus(), 200);
+  };
+
+  window.closeModal = function() {
+    document.getElementById('modal').classList.remove('open');
+    document.body.style.overflow = '';
+    document.getElementById('note-input').value = '';
+    selectedKey = null;
+  };
+
+  window.closeModalOutside = function(e) {
+    if (e.target.id === 'modal') closeModal();
+  };
+
+  function renderNotesList() {
+    const list = document.getElementById('notes-list');
+    list.innerHTML = '';
+    const ns = notesCache[selectedKey] || [];
+    if (!ns.length) {
+      list.innerHTML = `<div class="empty-state"><div class="empty-icon">🩵</div><div>ยังไม่มีโน้ตสำหรับวันนี้ค่ะ</div></div>`;
+      return;
+    }
+    ns.forEach((note, i) => {
+      const item = document.createElement('div');
+      item.className = 'note-item';
+      item.innerHTML = `
+        <div class="note-item-text">${note}</div>
+        <button class="note-delete" onclick="deleteNote(${i})">✕</button>`;
+      list.appendChild(item);
+    });
+  }
+
+  window.addNote = async function() {
+    const input = document.getElementById('note-input');
+    const text  = input.value.trim();
+    if (!text || !selectedKey) return;
+    if (!notesCache[selectedKey]) notesCache[selectedKey] = [];
+    notesCache[selectedKey].push(text);
+    input.value = '';
+    renderNotesList();
+    render();
+    await saveToFirebase();
+  };
+
+  window.deleteNote = async function(i) {
+    if (!notesCache[selectedKey]) return;
+    notesCache[selectedKey].splice(i, 1);
+    if (!notesCache[selectedKey].length) delete notesCache[selectedKey];
+    renderNotesList();
+    render();
+    await saveToFirebase();
+  };
+
+  window.handleKey = function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addNote(); }
+  };
+
+  window.changeMonth = function(dir) {
+    viewMonth += dir;
+    if (viewMonth > 11) { viewMonth=0; viewYear++; }
+    if (viewMonth < 0)  { viewMonth=11; viewYear--; }
+    render();
+  };
+
+  window.goToday = function() {
+    viewYear  = todayDate.getFullYear();
+    viewMonth = todayDate.getMonth();
+    render();
+  };
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeModal();
+  });
+</script>
+</body>
+</html>
